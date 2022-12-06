@@ -16,13 +16,13 @@ $zone
 
 $FieldConfig
         Component_1 Component_2
-Omega   "2"         "2"        
-Epsilon "0"         "0"        
-Beta    "IID"       "IID"      
+Omega   "3"         "2"        
+Epsilon "3"         "3"        
+Beta    "4"         "4"        
 
 $RhoConfig
    Beta1    Beta2 Epsilon1 Epsilon2 
-       0        0        0        0 
+       3        3        0        1 
 
 $VamConfig
 Method   Rank Timing 
@@ -33,16 +33,18 @@ Eta1 Eta2
    0    0 
 
 $ObsModel
-[1] 1 1
+[1] 4 0
 
 $vars_to_correct
 [1] "Index_cyl" "Index_ctl"
 
 $Options
-         Calculate_Range Calculate_effective_area         Calculate_Cov_SE 
-                   FALSE                    FALSE                     TRUE 
-         Project_factors 
-                    TRUE 
+         SD_site_density       SD_site_logdensity          Calculate_Range 
+                       0                        0                        1 
+      Calculate_evenness Calculate_effective_area         Calculate_Cov_SE 
+                       0                        0                        0 
+     Calculate_Synchrony      Calculate_Coherence 
+                       0                        0 
 
 $grid_size_km
 [1] 25
@@ -63,5 +65,5 @@ $fine_scale
 [1] TRUE
 
 $bias.correct
-[1] FALSE
+[1] TRUE
 
