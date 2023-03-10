@@ -59,8 +59,8 @@ pnts <- df %>%
 #Create a polygon
 polygon <- concaveman(pnts, concavity = 17)
 polygon <- st_coordinates(polygon)
-pin <- sp::point.in.polygon(l$x[],
-                            l$y[],
+pin <- sp::point.in.polygon(lcatch$x[],
+                            lcatch$y[],
                             polygon[,1],
                             polygon[,2])
 l$pin <- pin
@@ -124,7 +124,7 @@ dev.off()
 
 png("prettyVASToutput_encounter.png")
 ggpubr::ggarrange(p[[2]],
-                  nrow= 2,
+                  # nrow= 2,
                   common.legend = FALSE,
                   legend = 'right')
 dev.off()

@@ -7,6 +7,7 @@ df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey.csv"), header=TRU
 df <- df[df$Lat>=44.25 & df$Lat<=48.3,]
 df <- df %>% 
   filter(Month == 'June') %>%
+  filter(Study == 'JSOES_MaxCatch' | Study == 'JSOES_Regular') %>%
   gather(key="sp", 
          value="catch",
          c(Sablefish_juv, CK_subyearling, CK_yearling, Coho_yearling))
@@ -26,7 +27,7 @@ strata.limits <- data.frame(
 #Center of gravity
 Options = c(SD_site_density = 0 
             ,SD_site_logdensity = 0
-            ,Calculate_Range = TRUE #Center of gravity 
+            ,Calculate_Range = 0 #Center of gravity 
             ,Calculate_evenness = 0 
             ,Calculate_effective_area = 0
             ,Calculate_Cov_SE = 0 
@@ -43,8 +44,8 @@ settings = make_settings( n_x = 150, #50
 
 settings$ObsModel <- c(4,0) #Delta log-normal
 settings$FieldConfig['Beta',] = 4 #intercept rank
-settings$FieldConfig['Omega',] = c(3,3) #Spatial ranks for encounter and catch
-settings$FieldConfig['Epsilon',] = c(4,4) #Spatiotemporal ranks for encounter and catch
+settings$FieldConfig['Omega',] = c(3,2) #Spatial ranks for encounter and catch
+settings$FieldConfig['Epsilon',] = c(3,3) #Spatiotemporal ranks for encounter and catch
 
 #Correlation for modeled processes
 settings$RhoConfig['Beta1'] = 3 #Encounter constant fixed intercept
