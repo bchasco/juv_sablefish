@@ -1,22 +1,38 @@
+# Plot the output from VAST
+# Creates a map with interpolated results
+
+# Source this file, then run the function prettyVastPlot()
+
+library(data.table)
+library(sf)
+library(tidyr)
+library(dplyr)
+library(concaveman)
+library(RANN)
+library(ggplot2)
+library(viridis)
+library(viridisLite)
+
+#Grab the spatial data you need
+world <- rnaturalearth::ne_countries(continent='north america', scale = "large", returnclass = "sf")
+usa_states <- rnaturalearth::ne_states(country = 'United States of America', returnclass = 'sf')
+world2 <- sf::st_transform(world,crs="+proj=utm +zone=10 +datum=WGS84  +units=km")
+
+
 prettyVastPlot <- function(fit, 
                    process = "catch", 
                    re = "s",
+                   year = 2020,
                    n_vir = 8,
-                   min_v = 2, 
-                   max_v = 8,
+                   min_v_c = 2, max_v_c = 8,
+                   min_v_e = 0, max_v_e = 1,
                    ncave = 10,
                    bnd1_convex = -0.06,
                    include_stations = TRUE){
-  library(data.table)
-  library(sf)
-  library(tidyr)
-  library(dplyr)
-  library(concaveman)
-  library(RANN)
-  library(ggplot2)
-  library(viridis)
-  library(viridisLite)
   
+  yy <- year-1997 # this converts it to an index, from 1 (1998) to 23 (2020)
+  if (process == "encounter") min_v <- min_v_e else min_v <- min_v_c
+  if (process == "encounter") max_v <- max_v_e else max_v <- max_v_c
   
   df <- sdmTMB::add_utm_columns(as.data.frame(fit$data_frame[,c("Lat_i","Lon_i",'t_i')]),
                                 ll_names=c("Lon_i","Lat_i"),
@@ -41,7 +57,7 @@ prettyVastPlot <- function(fit,
       om <- t(t(fit$Report$Omega1_sc[,]) + fit$Report$beta1_tc[1,])
     }
     if(re == "st"){
-      om <- t(t(fit$Report$Omega1_sc[,] +fit$Report$Epsilon1_sct[,,23]) + fit$Report$beta1_tc[1,])
+      om <- t(t(fit$Report$Omega1_sc[,] +fit$Report$Epsilon1_sct[,,yy]) + fit$Report$beta1_tc[1,])
     }
   }
   if(process == "catch"){
@@ -50,8 +66,8 @@ prettyVastPlot <- function(fit,
       om <- t(fit$Report$beta2_tc[1,] +t(fit$Report$Omega2_sc[,]))
     }
     if(re == "st"){
-      #2020 catch rate
-      om <- t(fit$Report$beta2_tc[1,] + t(fit$Report$Omega2_sc[,] + fit$Report$Epsilon2_sct[,,23]))
+      #year-specific catch rate
+      om <- t(fit$Report$beta2_tc[1,] + t(fit$Report$Omega2_sc[,] + fit$Report$Epsilon2_sct[,,yy]))
     }
   }
 
@@ -120,12 +136,6 @@ prettyVastPlot <- function(fit,
                               polygon[,1],
                               polygon[,2])
 
-  #Grab the spatial data you need
-  world <- rnaturalearth::ne_countries(continent='north america', scale = "large", returnclass = "sf")
-  usa_states <- rnaturalearth::ne_states(country = 'United States of America', returnclass = 'sf')
-
-  world2 <- sf::st_transform(world,crs="+proj=utm +zone=10 +datum=WGS84  +units=km")
-
   p <- ggplot(data = world2) +
     coord_sf(crs = "+proj=utm +datum=WGS84 +no_defs +zone=10 +units=km") +
     xlim(310,510)+
@@ -134,10 +144,13 @@ prettyVastPlot <- function(fit,
       limits = c(310,470),
       breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
     )
+  
+  if (re=='st') p<-p + ggtitle(year) else p<-p + ggtitle("Average")
 
   p <- p +   ggplot2::geom_raster(data = loc_xy[pin==1,], aes(x = x, y = y, fill= val)) +
     scale_fill_gradientn(colors = viridis_pal()(n_vir), limits=c(min_v, max_v)) +
-    facet_wrap(~cat) + 
+    #facet_wrap(~cat) + # This would make it 2x2
+    facet_grid(. ~ cat) + 
     theme(plot.margin = margin(0, 0, 0, 0, "cm"))
 
   p <- p +
@@ -147,7 +160,7 @@ prettyVastPlot <- function(fit,
     xlab('')
 
   if(process == "encounter"){
-    p <- p + guides(fill=guide_legend("Encounter")) 
+    p <- p + guides(fill=guide_legend("Encounter Prob.")) 
   }  
   if(process == "catch"){
     p <- p + guides(fill=guide_legend("log(Catch)")) 
@@ -159,9 +172,9 @@ prettyVastPlot <- function(fit,
                         inherit.aes = FALSE)
   }
   
-  return(list(p = p, #ggplot
-              loc_xy = loc_xy #coordinate data
-              ))
+  return(list(p = p))#, #ggplot
+              #loc_xy = loc_xy #coordinate data
+              #))
   
 }
 

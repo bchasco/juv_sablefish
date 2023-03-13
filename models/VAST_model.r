@@ -16,7 +16,9 @@ df <- df %>%
 
 table(df$sp, df$Year)
 table(df$Study)
-#df[df$Year==2016,]
+table(df$Sample_Date[df$Year==2006 & df$sp=="CK_yearling"])
+for (yy in unique(df$Year)) cat(yy, length(table(df$Sample_Date[df$Year==yy & df$sp=="CK_yearling"])), "\n")
+table(df$Station[df$Year==2006 & df$sp=="CK_yearling"])
 
 #Spatial extent of the survey
 strata.limits <- data.frame(
@@ -67,7 +69,7 @@ fit = fit_model( settings = settings, #read in settings
                  getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
-saveRDS(fit, "fit.rds")
+# saveRDS(fit, "fit.rds")
 
 
 # Plot results
