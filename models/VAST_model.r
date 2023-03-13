@@ -14,7 +14,9 @@ df <- df %>%
          c(Sablefish_juv, CK_subyearling, CK_yearling, Coho_yearling))
 # df <- na.omit(df)
 
-
+table(df$sp, df$Year)
+table(df$Study)
+#df[df$Year==2016,]
 
 #Spatial extent of the survey
 strata.limits <- data.frame(
