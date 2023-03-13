@@ -4,7 +4,9 @@ prettyVastPlot <- function(fit,
                    n_vir = 8,
                    min_v = 2, 
                    max_v = 8,
-                   ncave = 10){
+                   ncave = 10,
+                   bnd1_convex = -0.06,
+                   include_stations = TRUE){
   library(data.table)
   library(sf)
   library(tidyr)
@@ -16,7 +18,7 @@ prettyVastPlot <- function(fit,
   library(viridisLite)
   
   
-  df <- sdmTMB::add_utm_columns(as.data.frame(fit$data_frame[,c("Lat_i","Lon_i")]),
+  df <- sdmTMB::add_utm_columns(as.data.frame(fit$data_frame[,c("Lat_i","Lon_i",'t_i')]),
                                 ll_names=c("Lon_i","Lat_i"),
                                 utm_names = c("utm_lon","utm_lat"),
                                 utm_crs = "+proj=utm +zone=10 +datum=WGS84",
@@ -58,31 +60,61 @@ prettyVastPlot <- function(fit,
   loc <- as.data.frame(fit$spatial_list$MeshList$anisotropic_mesh$loc[,1:2])
   x_seq <- seq(min(loc[,1]),max(loc[,1]), length.out=100)
   y_seq <- seq(min(loc[,2]),max(loc[,2]), length.out=100)
-  loc_xy <- as.data.frame(expand.grid(x_seq,y_seq))
+  loc_mat <- matrix(NA, 100,100)
   
+  loc_xy <- as.data.frame(expand.grid(x_seq,y_seq))
   names(loc_xy) <- c('x','y')
-  for(j in 1:4){
-    nn <- nn2(loc, loc_xy[,c('x','y')], k = 1)
-    if(process == "encounter"){
-      loc_xy[,cat[j]] <- plogis(om[nn$nn.idx,j])
+
+  for(k in 1:4){
+    for(i in 1:100){
+      for(j in 1:100){
+        om_id <- nn2(loc,matrix(c(x_seq[i],y_seq[j]),1,2),k=1)
+        loc_mat[i,j] <- plogis(om[om_id$nn.idx,k])
+        if(process == "encounter"){
+          loc_mat[i,j] <- plogis(om[om_id$nn.idx,k])
+        }
+        if(process == "catch"){
+          loc_mat[i,j] <- om[om_id$nn.idx,k]
+        }
+      }
     }
-    if(process == "catch"){
-      loc_xy[,cat[j]] <- om[nn$nn.idx[,1],j]
-    }
+    #This is for smoothing the display
+    rd <- raster::disaggregate(raster::raster(t(loc_mat)),
+                               fact = c(1,1),
+                               method="bilinear")
+    rd <- raster::focal(rd, w=matrix(1, 5, 5), mean)
+    loc_xy[,cat[k]] <- rd@data@values
   }
+
+  # names(loc_xy) <- c('x','y')
+  # for(j in 1:4){
+  #   nn <- nn2(loc, loc_xy[,c('x','y')], k = 1)
+  #   if(process == "encounter"){
+  #     loc_xy[,cat[j]] <- plogis(om[nn$nn.idx,j])
+  #   }
+  #   if(process == "catch"){
+  #     loc_xy[,cat[j]] <- om[nn$nn.idx[,1],j]
+  #   }
+  # }
   loc_xy <- loc_xy %>%
     pivot_longer(!c(x,y), names_to = "cat", values_to = "val")
 
-  loc_xy$process <- process
   if(re =="s"){
-    loc_xy$spatial <- "Equilibrium"
+    loc_xy$spatial <- "Average"
   }else{
     loc_xy$spatial <- "2020"
   }
   
-  #Create a polygon
-  polygon <- concaveman(pnts, concavity = ncave)
-  polygon <- st_coordinates(polygon)
+  #Create an edge polygon using INLA
+  max.edge = c(10, 10)
+  cutoff = 2
+  max.n = c(100,100)
+  bnd1 <- as.data.frame(INLA::inla.nonconvex.hull(as.matrix(cbind(df$utm_lon,df$utm_lat)), convex = bnd1_convex)$loc)
+  names(bnd1) <- c("E_km", "N_km")
+  bnd1 <- bnd1 %>%
+    st_as_sf(coords = c("E_km", "N_km"), crs = "+proj=utm +zone=10 +datum=WGS84")
+
+  polygon <- st_coordinates(bnd1)
   pin <- sp::point.in.polygon(loc_xy$x[],
                               loc_xy$y[],
                               polygon[,1],
@@ -121,8 +153,15 @@ prettyVastPlot <- function(fit,
     p <- p + guides(fill=guide_legend("log(Catch)")) 
   }  
   
-  return(list(p = p,
-              loc_xy = loc_xy))
+  if(include_stations){
+    p <- p + geom_point(data = df[df$t_i==2020,],
+                        aes(x = utm_lon, y = utm_lat),
+                        inherit.aes = FALSE)
+  }
+  
+  return(list(p = p, #ggplot
+              loc_xy = loc_xy #coordinate data
+              ))
   
 }
 

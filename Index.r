@@ -48,9 +48,9 @@ g <- ggplot(val, aes(x = year, y = est)) +
              linetype = "dashed")
   
 
-# png("Index.png")
+png("Index.png")
 
 print(g)
-
-# dev.off()
+# 
+dev.off()
 

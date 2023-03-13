@@ -2,6 +2,7 @@
 library(VAST)
 library(dplyr)
 library(tidyr)
+
 #Read in the data
 df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey.csv"), header=TRUE))
 df <- df[df$Lat>=44.25 & df$Lat<=48.3,]
@@ -11,7 +12,7 @@ df <- df %>%
   gather(key="sp", 
          value="catch",
          c(Sablefish_juv, CK_subyearling, CK_yearling, Coho_yearling))
-df <- na.omit(df)
+# df <- na.omit(df)
 
 
 
@@ -64,21 +65,15 @@ fit = fit_model( settings = settings, #read in settings
                  getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
-# fit <- saveRDS(fit, "fit.rds")
+saveRDS(fit, "fit.rds")
 
 
 # Plot results
-xx <- plot_results(fit,
-             years_to_plot = round(seq(2020,2020,1))-1997,
-            plot_set = c(16,17),
-            check_residuals = FALSE,
-            Panel = "Year",
-            n_cells = 500,
-)
+# xx <- plot_results(fit,
+#              years_to_plot = round(seq(2020,2020,1))-1997,
+#             plot_set = c(16,17),
+#             check_residuals = FALSE,
+#             Panel = "Year",
+#             n_cells = 500,
+# )
 
-# plot_maps(fit, xx$map_list$PlotDF,
-#                    years_to_plot = round(c(2020,2020,1))-1997,
-#                    plot_set = c(16,17),
-#                    check_residuals = FALSE,
-#                    Panel = "Year",
-#                    n_cells = 500)
