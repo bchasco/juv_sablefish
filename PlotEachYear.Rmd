@@ -8,25 +8,47 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-source("models/VAST_model.r")
+library(VAST)
+library(dplyr)
+library(tidyr)
+#source("models/VAST_model.r")
+
+#Read in the data
+df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey.csv"), header=TRUE))
+df <- df[df$Lat>=44.25 & df$Lat<=48.3,]
+df <- df %>% 
+  filter(Month == 'June') %>%
+  filter(Study == 'JSOES_MaxCatch' | Study == 'JSOES_Regular') %>%
+  gather(key="sp", 
+         value="catch",
+         c(Sablefish_juv, CK_subyearling, CK_yearling, Coho_yearling))
+# Load the saved model results
+fit<-readRDS("fit.rds")
+
+# Load the plotting functions
 source("prettyVASTPlot.r")
+
 ```
 
-## Encounter Probability
+## Equilibrium (Average)
 
 
-```{r encounter, echo=FALSE}
+```{r equilibrium, echo=FALSE, results = 'hide', warning=FALSE, message=FALSE}
 prettyVastPlot(fit = fit, include_stations = FALSE, re = 's', process = 'encounter')
+prettyVastPlot(fit = fit, include_stations = FALSE, re = 's', process = 'catch')
+prettyVastPlot(fit = fit, include_stations = FALSE, re = 's', process = 'total')
 
-for (yy in sort(unique(df$Year))) print(prettyVastPlot(fit = fit, include_stations = FALSE, re = 'st', process = 'encounter', year = yy))
 ```
 
-## Abundance
+## Annual Results
 
 
-```{r abundance, echo=FALSE}
+```{r annual, echo=FALSE, results = 'hide', warning=FALSE, message=FALSE}
 
-prettyVastPlot(fit = fit, include_stations = FALSE, re = 's', process = 'catch')
+for (yy in sort(unique(df$Year))) {
+  print(prettyVastPlot(fit = fit, include_stations = FALSE, re = 'st', process = 'encounter', year = yy))
+  print(prettyVastPlot(fit = fit, include_stations = FALSE, re = 'st', process = 'catch', year = yy))
+  print(prettyVastPlot(fit = fit, include_stations = FALSE, re = 'st', process = 'total', year = yy))
+}
 
-for (yy in sort(unique(df$Year))) print(prettyVastPlot(fit = fit, include_stations = FALSE, re = 'st', process = 'catch', year = yy))
 ```

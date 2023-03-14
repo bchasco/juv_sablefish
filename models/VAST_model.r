@@ -14,11 +14,11 @@ df <- df %>%
          c(Sablefish_juv, CK_subyearling, CK_yearling, Coho_yearling))
 # df <- na.omit(df)
 
-table(df$sp, df$Year)
-table(df$Study)
-table(df$Sample_Date[df$Year==2006 & df$sp=="CK_yearling"])
-for (yy in unique(df$Year)) cat(yy, length(table(df$Sample_Date[df$Year==yy & df$sp=="CK_yearling"])), "\n")
-table(df$Station[df$Year==2006 & df$sp=="CK_yearling"])
+# table(df$sp, df$Year)
+# table(df$Study)
+# table(df$Sample_Date[df$Year==2006 & df$sp=="CK_yearling"])
+# for (yy in unique(df$Year)) cat(yy, length(table(df$Sample_Date[df$Year==yy & df$sp=="CK_yearling"])), "\n")
+# table(df$Station[df$Year==2006 & df$sp=="CK_yearling"])
 
 #Spatial extent of the survey
 strata.limits <- data.frame(

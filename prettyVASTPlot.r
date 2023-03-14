@@ -20,19 +20,23 @@ world2 <- sf::st_transform(world,crs="+proj=utm +zone=10 +datum=WGS84  +units=km
 
 
 prettyVastPlot <- function(fit, 
-                   process = "catch", 
-                   re = "s",
-                   year = 2020,
-                   n_vir = 8,
-                   min_v_c = 2, max_v_c = 8,
-                   min_v_e = 0, max_v_e = 1,
+                   process = "catch", # "catch", "encounter", or "total"
+                   re = "s", # 's' (spatial, or average) or 'st' (spatiotemporal, or annual)
+                   year = 2020, # plot year (only used if re = 'st')
+                   n_vir = 8, # number of colors in output legend
+                   min_v_c = 2, max_v_c = 8, # range of legend for catch
+                   min_v_e = 0, max_v_e = 1, # rnge of legend for encounter
+                   min_v_t = 0, max_v_t = 8, # rnge of legend for encounter
                    ncave = 10,
                    bnd1_convex = -0.06,
-                   include_stations = TRUE){
+                   include_stations = TRUE,
+                   grid_x = 100, # raster grid for output display
+                   grid_y = 100) {
   
   yy <- year-1997 # this converts it to an index, from 1 (1998) to 23 (2020)
-  if (process == "encounter") min_v <- min_v_e else min_v <- min_v_c
-  if (process == "encounter") max_v <- max_v_e else max_v <- max_v_c
+  if (process == "encounter") { min_v <- min_v_e; max_v <- max_v_e }
+  if (process == "catch") { min_v <- min_v_c; max_v <- max_v_c }
+  if (process == "total") { min_v <- min_v_t; max_v <- max_v_t }
   
   df <- sdmTMB::add_utm_columns(as.data.frame(fit$data_frame[,c("Lat_i","Lon_i",'t_i')]),
                                 ll_names=c("Lon_i","Lat_i"),
@@ -51,7 +55,7 @@ prettyVastPlot <- function(fit,
 
 
 
-  #Processes with different random effects
+  # Processes with different random effects
   if(process == "encounter"){
     if(re == "s"){
       om <- t(t(fit$Report$Omega1_sc[,]) + fit$Report$beta1_tc[1,])
@@ -70,27 +74,40 @@ prettyVastPlot <- function(fit,
       om <- t(fit$Report$beta2_tc[1,] + t(fit$Report$Omega2_sc[,] + fit$Report$Epsilon2_sct[,,yy]))
     }
   }
-
+  if(process == "total"){
+    if(re == "s"){
+      om_e <- t(t(fit$Report$Omega1_sc[,]) + fit$Report$beta1_tc[1,])
+      om_c <- t(fit$Report$beta2_tc[1,] +t(fit$Report$Omega2_sc[,]))
+    }
+    if(re == "st"){
+      om_e <- t(t(fit$Report$Omega1_sc[,] +fit$Report$Epsilon1_sct[,,yy]) + fit$Report$beta1_tc[1,])
+      om_c <- t(fit$Report$beta2_tc[1,] + t(fit$Report$Omega2_sc[,] + fit$Report$Epsilon2_sct[,,yy]))
+    }
+  }
+  
 
   #grid
   loc <- as.data.frame(fit$spatial_list$MeshList$anisotropic_mesh$loc[,1:2])
-  x_seq <- seq(min(loc[,1]),max(loc[,1]), length.out=100)
-  y_seq <- seq(min(loc[,2]),max(loc[,2]), length.out=100)
-  loc_mat <- matrix(NA, 100,100)
+  x_seq <- seq(min(loc[,1]),max(loc[,1]), length.out=grid_x)
+  y_seq <- seq(min(loc[,2]),max(loc[,2]), length.out=grid_y)
+  loc_mat <- matrix(NA, grid_x,grid_y)
   
   loc_xy <- as.data.frame(expand.grid(x_seq,y_seq))
   names(loc_xy) <- c('x','y')
 
-  for(k in 1:4){
-    for(i in 1:100){
-      for(j in 1:100){
-        om_id <- nn2(loc,matrix(c(x_seq[i],y_seq[j]),1,2),k=1)
-        loc_mat[i,j] <- plogis(om[om_id$nn.idx,k])
+  # Convert the model output to the raster grid
+  for(k in 1:4){ # Loop over the categories (species in this case)
+    for(i in 1:grid_x){
+      for(j in 1:grid_y){
+        om_id <- nn2(loc,matrix(c(x_seq[i],y_seq[j]),1,2),k=1) # nearest neighbor
         if(process == "encounter"){
           loc_mat[i,j] <- plogis(om[om_id$nn.idx,k])
         }
         if(process == "catch"){
           loc_mat[i,j] <- om[om_id$nn.idx,k]
+        }
+        if(process == "total"){
+          loc_mat[i,j] <- plogis(om_e[om_id$nn.idx,k]) * om_c[om_id$nn.idx,k]
         }
       }
     }
@@ -115,11 +132,11 @@ prettyVastPlot <- function(fit,
   loc_xy <- loc_xy %>%
     pivot_longer(!c(x,y), names_to = "cat", values_to = "val")
 
-  if(re =="s"){
-    loc_xy$spatial <- "Average"
-  }else{
-    loc_xy$spatial <- "2020"
-  }
+  # if(re =="s"){
+  #   loc_xy$spatial <- "Average"
+  # }else{
+  #   loc_xy$spatial <- "2020"
+  # }
   
   #Create an edge polygon using INLA
   max.edge = c(10, 10)
@@ -145,7 +162,7 @@ prettyVastPlot <- function(fit,
       breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
     )
   
-  if (re=='st') p<-p + ggtitle(year) else p<-p + ggtitle("Average")
+  if (re=='st') p<-p + ggtitle(year) else p<-p + ggtitle("Equilibrium")
 
   p <- p +   ggplot2::geom_raster(data = loc_xy[pin==1,], aes(x = x, y = y, fill= val)) +
     scale_fill_gradientn(colors = viridis_pal()(n_vir), limits=c(min_v, max_v)) +
@@ -159,11 +176,14 @@ prettyVastPlot <- function(fit,
     ylab('') +
     xlab('')
 
-  if(process == "encounter"){
+  if(process == "encounter") {
     p <- p + guides(fill=guide_legend("Encounter Prob.")) 
   }  
-  if(process == "catch"){
+  if(process == "catch") {
     p <- p + guides(fill=guide_legend("log(Catch)")) 
+  }  
+  if(process == "total") {
+    p <- p + guides(fill=guide_legend("Total")) 
   }  
   
   if(include_stations){
