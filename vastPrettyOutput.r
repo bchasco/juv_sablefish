@@ -1,40 +1,17 @@
 l <- list()
-l[[1]] <- prettyVastPlot(fit, process = "catch",
+l[[1]] <- prettyVastPlot(fit,
                          re = "s",
                          n_vir = 7, min_v = 2,
                          bnd1_convex = -0.06,
                          max_v = 8,
-                         ncave = 17)$loc_xy
-l[[2]] <- prettyVastPlot(fit, process = "catch",
-                         re = "st",
-                         n_vir = 7, min_v = 2,
-                         bnd1_convex = -0.08,
-                         max_v = 8,
-                         ncave = 17)$loc_xy
-l[[3]] <- prettyVastPlot(fit, process = "encounter",
-                         re = "s",
-                         n_vir = 6, min_v = 0,
-                         bnd1_convex = -0.07,
-                         max_v = 1,
-                         ncave = 17)$loc_xy
-l[[4]] <- prettyVastPlot(fit, process = "encounter",
-                         re = "st",
-                         n_vir = 6, min_v = 0,
-                         bnd1_convex = -0.07,
-                         max_v = 1,
-                         ncave = 17)$loc_xy
-
-#Eventhough prettyVASTplot produces the plots
-#You need to do this so you can combine the different categories 
-lcatch <- rbind(l[[1]],l[[2]])
-lencounter <- rbind(l[[3]],l[[4]])
+                         ncave = 17)
 
 df <- sdmTMB::add_utm_columns(as.data.frame(fit$data_frame[,c("Lat_i","Lon_i", "t_i", "c_iz", "b_i")]),
                               ll_names=c("Lon_i","Lat_i"),
                               utm_names = c("utm_lon","utm_lat"),
                               utm_crs = "+proj=utm +zone=10 +datum=WGS84",
                               units = "km")
-df$b_i <- drop_units(df$b_i)
+df$b_i <- units::drop_units(df$b_i)
 df$spatial <- as.character(df$t_i)
 
 cat <- c("Subyearling \nChinook", 
@@ -47,28 +24,6 @@ df <- df
 pnts <- df %>%
   st_as_sf(coords = c("utm_lon", "utm_lat"), crs = "+proj=utm +zone=10 +datum=WGS84")
 
-#Create a polygon
-# polygon <- concaveman(pnts, concavity = 17)
-# polygon <- st_coordinates(polygon)
-# pin <- sp::point.in.polygon(lcatch$x[],
-#                             lcatch$y[],
-#                             polygon[,1],
-#                             polygon[,2])
-
-#  #Create an edge polygon using INLA
-max.edge = c(10, 10)
-cutoff = 2
-max.n = c(100,100)
-bnd1 <- as.data.frame(INLA::inla.nonconvex.hull(as.matrix(cbind(df$utm_lon,df$utm_lat)), convex = bnd1_convex)$loc)
-names(bnd1) <- c("E_km", "N_km")
-bnd1 <- bnd1 %>%
-  st_as_sf(coords = c("E_km", "N_km"), crs = "+proj=utm +zone=10 +datum=WGS84")
-
-polygon <- st_coordinates(bnd1)
-pin <- sp::point.in.polygon(lcatch$x[],
-                            lcatch$y[],
-                            polygon[,1],
-                            polygon[,2])
 
 #Grab the spatial data you need
 world <- rnaturalearth::ne_countries(continent='north america', scale = "large", returnclass = "sf")

@@ -16,8 +16,8 @@ $zone
 
 $FieldConfig
         Component_1 Component_2
-Omega   "3"         "2"        
-Epsilon "3"         "3"        
+Omega   "1"         "1"        
+Epsilon "1"         "1"        
 Beta    "4"         "4"        
 
 $RhoConfig

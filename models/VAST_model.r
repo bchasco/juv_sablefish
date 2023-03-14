@@ -45,8 +45,8 @@ settings = make_settings( n_x = 150, #50
 
 settings$ObsModel <- c(4,0) #Delta log-normal
 settings$FieldConfig['Beta',] = 4 #intercept rank
-settings$FieldConfig['Omega',] = c(3,2) #Spatial ranks for encounter and catch
-settings$FieldConfig['Epsilon',] = c(3,3) #Spatiotemporal ranks for encounter and catch
+settings$FieldConfig['Omega',] = c(1,1) #Spatial ranks for encounter and catch
+settings$FieldConfig['Epsilon',] = c(1,1) #Spatiotemporal ranks for encounter and catch
 
 #Correlation for modeled processes
 settings$RhoConfig['Beta1'] = 3 #Encounter constant fixed intercept
@@ -65,15 +65,15 @@ fit = fit_model( settings = settings, #read in settings
                  getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
-saveRDS(fit, "fit.rds")
+# saveRDS(fit, "fit.rds")
 
-
+# readRDS("fit.rds")
 # Plot results
-# xx <- plot_results(fit,
-#              years_to_plot = round(seq(2020,2020,1))-1997,
-#             plot_set = c(16,17),
-#             check_residuals = FALSE,
-#             Panel = "Year",
-#             n_cells = 500,
-# )
+xx <- plot_results(fit,
+             years_to_plot = round(seq(2020,2020,1))-1997,
+            plot_set = c(16),
+            check_residuals = FALSE,
+            Panel = "Year",
+            n_cells = 50,
+)
 
