@@ -1,6 +1,6 @@
-yrs_to_plot <- seq(2010,2020,5)
+yrs_to_plot <- (2020:2022)
 l <- prettyVastPlot(fit,
-                         re = "st",
+                         re = "s",
                          n_vir = 7, min_v = 2,
                          bnd1_convex = -0.06,
                          max_v = 8,
