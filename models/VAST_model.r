@@ -20,7 +20,7 @@ df <- df %>%
 # df <- df[df$Year<2020,]
 
 sst <- read.csv("./data/ersstArc.csv")
-sst <- sst[sst$month==6,]
+sst <- sst[sst$month==5,]
 df$sst <- scale(sst$sstarc[match(df$Year, sst$year)])
 df$TemperatureC_3m <- scale(df$TemperatureC_3m )
 

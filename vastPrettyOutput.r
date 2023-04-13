@@ -11,7 +11,7 @@ st <- prettyVastPlot(fit,
                          bnd1_convex = -0.06,
                          max_v = 8,
                          ncave = 17)
-years_to_include <- c(2010:2019,2022)
+years_to_include <- c(2020:2022)
 st$loc_xy <- st$loc_xy[st$loc_xy$yr%in%years_to_include,]
 st$loc_xy$yr <- as.factor(st$loc_xy$yr)
 all <- rbind(s$loc_xy,st$loc_xy)
@@ -53,7 +53,7 @@ p <- ggplot(data = world2) +
     breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
   ) +
   ggplot2::geom_raster(data = na.omit(all[all_pin==1,]), aes(x = x, y = y, fill= catch*encounter)) +
-  scale_fill_gradientn(colors = viridis_pal()(7), limits=c(0,6.5)) +
+  scale_fill_gradientn(colors = viridis_pal()(7), limits=c(0,7.5)) +
   facet_grid(yr ~ cat) +
   # guides(fill = guide_legend(reverse=TRUE)) +
   theme(plot.margin = margin(0, 0, 0, 0, "cm")) +
@@ -61,11 +61,12 @@ p <- ggplot(data = world2) +
   theme_bw() +
   ylab('') +
   xlab('') +
-  geom_point(data = df[df$t_i%in%years_to_include & !is.finite(df$val),], 
+  geom_point(data = df[df$t_i%in%years_to_include & !is.finite(df$val),],
              aes(x=utm_lon, y = utm_lat),
-             color = "red", 
+             color = "white",
              alpha = 0.5,
-             shape = 3)+
+             shape = 3,
+             size = 0.7)+
   geom_point(data = df[df$t_i%in%years_to_include,], 
              aes(x=utm_lon, y = utm_lat, size = val),
              color = "red", 
@@ -75,4 +76,4 @@ p <- ggplot(data = world2) +
 
 print(p)
 
-# ggsave("vastPrettyOutput.png", p, width = 6, height = 10, units="in")
+ggsave("vastPrettyOutput.png", p, width = 6, height = 10, units="in")

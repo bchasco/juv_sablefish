@@ -1,11 +1,12 @@
 fit <- fit
+cov <- fit$parameter_estimates$SD
 beta1 <- fit$Report$beta1_tc
 temp1 <- fit$ParHat$lambda1_k[1:4]
 sst1 <- fit$ParHat$lambda1_k[5:8]
 
 
 beta2 <- fit$Report$beta2_tc
-lam2 <- fit$ParHat$lambda2_k[1:4]
+temp2 <- fit$ParHat$lambda2_k[1:4]
 sst2 <- fit$ParHat$lambda2_k[5:8]
 
 #Read in the data
@@ -36,7 +37,7 @@ for(i in 1:nrow(temp_grid)){
   sp <- temp_grid[i,1]
   ctd_i <- temp_grid[i,2]
   sst_i <- temp_grid[i,3]
-  temp_grid$val[i] <- plogis(beta1[sp] + ctd_i * lam1[sp] + sst_i * sst1[sp])
+  temp_grid$val[i] <- plogis(beta1[sp] + ctd_i * temp1[sp] + sst_i * sst1[sp])
 }
 
 df_cat <- data.frame(id = 1:4, cat = c("Subyearling \nChinook", 
@@ -59,15 +60,73 @@ sst <- replicate(4,seq(range(df_t$sst)[1],range(df_t$sst)[2],length.out = 20))
 p_t <- data.frame(plogis( t(t(temp)*temp1 + beta1[1,])))
 p_sst <- data.frame(plogis( t(t(sst)*sst1 + beta1[1,])))
 
+p_t2 <- data.frame(( t(t(temp)*temp2 + beta2[1,])))
+p_sst2 <- data.frame(( t(t(sst)*sst2 + beta2[1,])))
+
 names(p_t) <- c("Subyearling \nChinook",
                 "Yearling \nChinook",
                 "Yearling \nCoho",
                 "Sablefish")
 
+names(p_t2) <- c("Subyearling \nChinook",
+                "Yearling \nChinook",
+                "Yearling \nCoho",
+                "Sablefish")
+
+png("ggplot_temperature_effect_encounter.png")
 par(mfrow=c(2,2))
-for(i in 1:4) plot(temp[,i], p_t[,i], main = names(p_t)[i], type="l", xlab="CTD 3m temp")
+ymax <- c(0.125,0.5,0.45,0.06)
+for(i in 1:4){
+  plot(sst[,i], 
+       p_sst[,i], 
+       main = names(p_t)[i], 
+       type="l", 
+       xlab="Covariate deviate", 
+       ylim=c(min(p_sst[,i],p_t[,i]),ymax[i]),
+       las = 1,
+       ylab="Encounter rate")
+  lines(temp[,i], p_t[,i], 
+        main = names(p_t)[i], 
+        type="l",
+        col ="blue")
+  if(i==1){
+    legend(0,ymax[i],
+           col=c("black","blue"),
+           legend = c("CTD 3m temp","SST"),
+           pch=-1,
+           lty=1,
+           bty="n")
+  }
+} 
+dev.off()
+
+png("ggplot_temperature_effect_catch.png")
 par(mfrow=c(2,2))
-for(i in 1:4) plot(sst[,i], p_sst[,i], main = names(p_t)[i], type="l", xlab="SST_arc temp")
+ymax <- c(4.1,4.0,04.5,6.5)
+ymin <- c(3.8,3.2,4.1,5.2)
+for(i in 1:4){
+  plot(sst[,i], 
+       p_sst2[,i], 
+       main = names(p_t2)[i], 
+       type="l", 
+       xlab="Covariate deviate", 
+       ylim=c(ymin[i],ymax[i]),
+       las = 1,
+       ylab="log ( positive catches )")
+  lines(temp[,i], p_t2[,i], 
+        main = names(p_t2)[i], 
+        type="l",
+        col ="blue")
+  if(i==1){
+    legend(0,ymax[i],
+           col=c("black","blue"),
+           legend = c("CTD 3m temp","SST"),
+           pch=-1,
+           lty=1,
+           bty="n")
+  }
+} 
+dev.off()
 
 # hist(df$)
 # 
