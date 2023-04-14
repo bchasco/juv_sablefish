@@ -53,7 +53,8 @@ p <- ggplot(data = world2) +
     breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
   ) +
   ggplot2::geom_raster(data = na.omit(all[all_pin==1,]), aes(x = x, y = y, fill= catch*encounter)) +
-  scale_fill_gradientn(colors = viridis_pal()(7), limits=c(0,7.5)) +
+  scale_fill_gradientn(colors = viridis_pal()(7), limits=c(0,7.5))+
+  guides(fill = guide_colourbar(reverse = TRUE)) +
   facet_grid(yr ~ cat) +
   # guides(fill = guide_legend(reverse=TRUE)) +
   theme(plot.margin = margin(0, 0, 0, 0, "cm")) +
@@ -72,7 +73,7 @@ p <- ggplot(data = world2) +
              color = "red", 
              alpha = 0.3,
              shape = 16) +
-  labs(fill="", size="log(catch km^2)")
+  labs(fill="Predicted\nlog(catch km^2)", size="Observed\nlog(catch km^2)")
 
 print(p)
 
