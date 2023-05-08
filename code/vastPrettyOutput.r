@@ -77,4 +77,4 @@ p <- ggplot(data = world2) +
 
 print(p)
 
-ggsave("vastPrettyOutput.png", p, width = 6, height = 10, units="in")
+ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\vastPrettyOutput.png", p, width = 6, height = 10, units="in")

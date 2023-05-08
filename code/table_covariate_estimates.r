@@ -9,4 +9,6 @@ var_names <- c("Station Temp. (Encounter)", "SST (Encounter)", "Station Temp. (c
 row.names(val) <- cat
 colnames(val) <- var_names
 
+covariate_vals <- val
+
 write.csv(val, file = "table_covariate_estimates.csv") 

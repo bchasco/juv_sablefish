@@ -2,7 +2,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 
-df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature_Including2021_2022.csv"), header=TRUE))
+df <- as.data.frame(read.csv("C:\\NOAA\\PROJECTS\\juv_sablefish\\data\\survey_temperature_Including2021_2022.csv", header=TRUE))
 
 df <- df[df$Lat>=44.25 & df$Lat<=48.3,]
 
@@ -32,8 +32,8 @@ g <- ggplot(data = world2) +
     limits = c(300,550),
     breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
   ) +
-  geom_point(data=df2, aes(x = utm_lon, y = utm_lat, size = 1), 
-             alpha = 0.1, colour = "black") +
+  geom_point(data=df2, aes(x = utm_lon, y = utm_lat, size = count), 
+             alpha = 0.1, fill = "black", shape = 21) +
   # guides(fill = guide_legend(reverse=TRUE)) +
   theme(plot.margin = margin(0, 0, 0, 0, "cm")) +
   geom_sf()+
@@ -41,5 +41,6 @@ g <- ggplot(data = world2) +
   ylab('') +
   xlab('') +
   labs(size="Total observations \n across all years")
-ggsave(filename = "sampleSizeMap.png", g, width=4, height = 6, units="in")
+
+ggsave(filename = "C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\sampleSizeMap.png", g, width=4, height = 6, units="in")
 

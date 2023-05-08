@@ -1,3 +1,6 @@
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 
 prettyData <- function(fit = fit){
   
@@ -54,9 +57,7 @@ prettyData <- function(fit = fit){
                size = 1) +
     facet_wrap(~t_i, ncol = 6)
 
-  print(p)
-  
-  ggsave("prettyData.png", p, width = 8, height = 10, units="in", dpi = 500)
+  ggsave("C:\\NOAA\\projects\\juv_sablefish\\output\\prettyData.png", p, width = 8, height = 10, units="in", dpi = 500)
   
 }
 

@@ -1,3 +1,8 @@
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(units)
+
 cat <-   c("Subyearling \nChinook", 
            "Yearling \nChinook",
            "Yearling \nCoho", 
@@ -41,7 +46,7 @@ g <- ggplot(val, aes(x = year, y = (est/m)-1)) +
   geom_point() +
   geom_errorbar(aes(ymin = (lwr/m)-1,
                 ymax = (upr/m)-1)) +
-  facet_wrap(~cat) +
+  facet_wrap(~cat, scales = "free") +
   theme_bw() + 
   theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
@@ -53,7 +58,7 @@ g <- ggplot(val, aes(x = year, y = (est/m)-1)) +
              linetype = "dashed")
   
 print(g)
-ggsave("Index_free.png",g)
+ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\Index.png",g)
 
 
 ave_cv <- val %>%

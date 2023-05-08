@@ -9,7 +9,10 @@ df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature_Inclu
 
 
 
+#This removes a line of samples off of Tatoosh and another line very far south
+#Neither of them were regualrly sampled before.
 df <- df[df$Lat>=44.25 & df$Lat<=48.3,]
+
 df <- df %>% 
   filter(Month == 'June') %>%
   filter(Study == 'JSOES_MaxCatch' | Study == 'JSOES_Regular') %>%
@@ -19,10 +22,20 @@ df <- df %>%
 # df <- na.omit(df)
 # df <- df[df$Year<2020,]
 
+options(pillar.sigfig=6)
+
+locs <- df %>% 
+  group_by(Station_ID = Station) %>%
+  summarise(m_lat = mean(Lat), m_long = mean(Long))
+
 sst <- read.csv("./data/ersstArc.csv")
 sst <- sst[sst$month==5,]
 df$sst <- scale(sst$sstarc[match(df$Year, sst$year)])
 df$TemperatureC_3m <- scale(df$TemperatureC_3m )
+
+#Reduce the 
+df$m_lat <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_lat']))
+df$m_long <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_long']))
 
 #Spatial extent of the survey
 strata.limits <- data.frame(
@@ -44,7 +57,7 @@ Options = c(SD_site_density = 0
             ,Calculate_Coherence = 0)
 
 # Make settings
-settings = make_settings( n_x = 150, #50 
+settings = make_settings( n_x = length(unique(df$Station)), #Set knots equal to the number of unique stations 
                           Options = Options,
                           treat_nonencounter_as_zero = TRUE,
                           Region = "california_current",
@@ -71,21 +84,21 @@ catchability_data <- df[,c('TemperatureC_3m','AvgOf_Top10mTempC','AvgOf_Top20mTe
 
 # Run model
 fit = fit_model( settings = settings, #read in settings
-                 Lat_i = df[,'Lat'],  
-                 Lon_i = df[,'Long'], 
+                 Lat_i = df[,'m_lat'],  
+                 Lon_i = df[,'m_long'], 
                  t_i = df[,'Year'], 
                  b_i = as_units(df[,'catch'],'count'), #Standardized by Cheryl
                  c_i = as.numeric(as.factor(df[,'sp']))-1, #-1 so factors start at 0 not 1
                  a_i = as_units(df[,'Trawling_distance_.km.']*0.02,'km^2'), #area offset
                  catchability_data = catchability_data,
-                 Q1_formula = ~ TemperatureC_3m:sp + sst:sp,
-                 Q2_formula = ~ TemperatureC_3m:sp + sst:sp,
+                 # Q1_formula = ~ TemperatureC_3m:sp + sst:sp,
+                 # Q2_formula = ~ TemperatureC_3m:sp + sst:sp,
                  # Q1_formula = ~ AvgOf_Top20mTempC:sp,
                  # Q2_formula = ~ AvgOf_Top20mTempC:sp,
-                 getsd = TRUE,
+                 getsd = FALSE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
-saveRDS(fit, "fit_w3_sst.rds")
+# saveRDS(fit, "C:/NOAA/large_data/juvenile_sablefish/fit_w3_sst.rds")
 
 # readRDS("fit.rds")
 # Plot results

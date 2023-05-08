@@ -1,0 +1,120 @@
+---
+title: "Plots for the paper"
+author: "Brandon Chasco"
+date: "2023-05-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+It takes a considerable amount of time to create many of these plots, so all of the following calls to R chunks are displayed, but the execute = FALSE.
+
+## This is how you actually run the model
+
+```{r, eval = FALSE}
+source("C:\\NOAA\\PROJECTS\\juv_sablefish\\code\\VAST_model.r")
+
+```
+
+
+
+## Load the model that we chose
+
+```{r, echo = TRUE, results = 'hide'}
+#Read in the fit that you are interested in
+#Because the output from the VAST model is so large, I keep it on a local 
+#directory called "C:\\NOAA\\LARGE_DATA\\juvenile_sablefish\\".
+#If you accidentally saved to your project you will create all sorts of issues when 
+#you try and push the next commits.
+fit <- readRDS("C:\\NOAA\\LARGE_DATA\\juvenile_sablefish\\fit_w3_sst.rds")
+
+```
+
+
+## The data for the model
+
+```{r, eval = TRUE, results = 'hide', warning=FALSE, message=FALSE}
+source("sampleSizeMap.r")
+```
+
+
+![Map of sample size across all years.](C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\sampleSizeMap.png)
+
+Plot of the indexes for each fish group.
+```{r, results='hide', eval = TRUE}
+source("Index.r")
+```
+
+![Figure X. Expected relative index (dots) and 95% confidence interval (encounter rate times density over the spatial domain of the model) during the June survey from 1998 to 2022.](C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\Index.png)
+## Spatiotemporal results
+
+```{r, results='hide', eval = TRUE}
+#This is plot function that I wrote
+source("C:\\NOAA\\PROJECTS\\juv_sablefish\\code\\prettyVASTPlot.r")
+
+#This uses the above plot function to create the output
+source("C:\\NOAA\\PROJECTS\\juv_sablefish\\code\\vastPrettyOutput.r")
+
+```
+
+![Spatiotemporal distribution of the expected average abundance (encounter rate times density) across all years, and the expected abundance for 2020 to 2022.](C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\vastPrettyOutput.png)
+
+## Table of covariate estimates.
+
+This will not be formatting directly coming out of R; you will need to do some work. 'pm' means +-.
+
+Table 1: Estimated effects and 95% confidence intervals for the average sea surface temperature in the top 3 meters (SST 3m) at each trawl location and the May SSTarc for each year as they relate to the the encounter rate and positive catches of the four fish categories.
+
+```{r, }
+
+#Table of covariate estimates for the catchability
+source("C:\\NOAA\\PROJECTS\\juv_sablefish\\code\\table_covariate_estimates.r")
+
+print(t(covariate_vals))
+```
+
+## Supplemental material.
+
+### Data plot
+
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+#Table of covariate estimates for the catchability
+
+source("C:\\NOAA\\PROJECTS\\juv_sablefish\\code\\prettyData.r")
+
+```
+
+![Figure X. Spatiotemporal distributions of the JSOES data during the June surveys from 1998 to 2022.](C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\prettyData.png)
+
+
+### Mesh plot
+
+
+```{r, echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+#Table of covariate estimates for the catchability
+library(INLA)
+
+png("C:\\NOAA\\projects\\juv_sablefish\\output\\mesh.png")
+plot(fit$spatial_list$MeshList$anisotropic_mesh, ylab="Northing", xlab="Easting")
+axis(1)
+axis(2)
+library(sdmTMB)
+
+tmp <- fit$data_frame[,c('Lon_i','Lat_i')]
+tmp <- add_utm_columns(tmp,
+                ll_names = c('Lon_i','Lat_i'),
+                utm_names = c('X','Y'))
+points(tmp$X, tmp$Y, col= "darkorange")
+
+
+dev.off()
+
+```
+
+![Figure X. Constrained Delaunay triangulation of reduced spatial data, with 150 knots used to represent the original dataset. The triangulation is constrained by ensuring that the triangle angles at the margins generally greater than 20 degrees,  ](C:\\NOAA\\PROJECTS\\juv_sablefish\\output\\mesh.png)
+
