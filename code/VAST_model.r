@@ -5,7 +5,7 @@ library(tidyr)
 
 #Read in the data
 # df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature.csv"), header=TRUE))
-df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature_Including2021_2022.csv"), header=TRUE))
+df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature_Including2021_2022_2023.csv"), header=TRUE))
 
 
 
@@ -95,7 +95,7 @@ fit = fit_model( settings = settings, #read in settings
                  # Q2_formula = ~ TemperatureC_3m:sp + sst:sp,
                  # Q1_formula = ~ AvgOf_Top20mTempC:sp,
                  # Q2_formula = ~ AvgOf_Top20mTempC:sp,
-                 getsd = FALSE,
+                 getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
 # saveRDS(fit, "C:/NOAA/large_data/juvenile_sablefish/fit_w3_sst.rds")

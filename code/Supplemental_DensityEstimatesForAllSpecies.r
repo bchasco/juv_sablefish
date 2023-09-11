@@ -12,7 +12,7 @@ st <- prettyVastPlot(fit,
                          bnd1_convex = -0.06,
                          max_v = 8,
                          ncave = 17)
-years_to_include <- c(1998:2022)
+years_to_include <- c(1998:2023)
 st$loc_xy <- st$loc_xy[st$loc_xy$yr%in%years_to_include,]
 st$loc_xy$yr <- as.factor(st$loc_xy$yr)
 all <- rbind(st$loc_xy)
@@ -55,7 +55,7 @@ for(i in 1:4){
       breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
     ) +
     ggplot2::geom_raster(data = na.omit(all[all_pin==1 & all$cat==cat[i],]), aes(x = x, y = y, fill= catch*encounter)) +
-    scale_fill_gradientn(colors = viridis_pal()(7), limits=c(0,7.5))+
+    scale_fill_gradientn(colors = viridis_pal()(8), limits=c(0,8.5))+
     guides(fill = guide_colourbar(reverse = TRUE)) +
     facet_wrap( ~ yr, ncol = 7) +
     # guides(fill = guide_legend(reverse=TRUE)) +

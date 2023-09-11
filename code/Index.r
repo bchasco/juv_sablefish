@@ -14,8 +14,8 @@ names(val) <- cat
 sd <- as.data.frame(t(as.list(fit$parameter_estimates$SD, "Std. Error", report=TRUE)$Index_ctl[,,1]))
 names(sd) <- cat
 
-sd$year <- 1998:2022
-val$year <- 1998:2022
+sd$year <- 1998:2023
+val$year <- 1998:2023
 
 #You hvae to remove all those sablefish years with no catches.
 obs <- data.frame(t = fit$data_frame$t_i, c = fit$data_frame$c_iz, b = fit$data_frame$b_i) 

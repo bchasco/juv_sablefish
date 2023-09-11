@@ -1,4 +1,5 @@
 library(ggplot2)
+source("./code/prettyVastPlot.r")
 s <- prettyVastPlot(fit,
                          re = "s",
                          n_vir = 7, min_v = 2,
@@ -11,7 +12,7 @@ st <- prettyVastPlot(fit,
                          bnd1_convex = -0.06,
                          max_v = 8,
                          ncave = 17)
-years_to_include <- c(2020:2022)
+years_to_include <- c(2020:2023)
 st$loc_xy <- st$loc_xy[st$loc_xy$yr%in%years_to_include,]
 st$loc_xy$yr <- as.factor(st$loc_xy$yr)
 all <- rbind(s$loc_xy,st$loc_xy)
