@@ -1,5 +1,6 @@
 library(ggplot2)
 
+source("./code/prettyVastPlot.r")
 # s <- prettyVastPlot(fit,
 #                          re = "s",
 #                          n_vir = 7, min_v = 2,

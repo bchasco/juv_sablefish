@@ -50,7 +50,7 @@ g[[4]] <- ggcorrplot(cov2cor(Cov_epsilon2), hc.order = FALSE, type = "upper",
 dev.off()
 
 library(ggpubr)
-png("corelation_plot.png")
+png("./output/corelation_plot.png")
 ggarrange(
   plotlist = g,
   nrow = 2,
@@ -60,3 +60,10 @@ ggarrange(
   legend = 'right')
 dev.off()
 
+ggarrange(
+  plotlist = g,
+  nrow = 2,
+  ncol = 2,
+  labels = paste('(',LETTERS[1:4],')'),
+  common.legend = TRUE,
+  legend = 'right')

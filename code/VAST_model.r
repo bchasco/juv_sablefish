@@ -2,6 +2,9 @@
 library(VAST)
 library(dplyr)
 library(tidyr)
+library(splines)  # Used to include basis-splines
+library(effects)  # Used to visualize covariate effects
+
 
 #Read in the data
 # df <- as.data.frame(read.csv(file=paste0(getwd(),"/data/survey_temperature.csv"), header=TRUE))
@@ -28,14 +31,14 @@ locs <- df %>%
   group_by(Station_ID = Station) %>%
   summarise(m_lat = mean(Lat), m_long = mean(Long))
 
-sst <- read.csv("./data/ersstArc.csv")
-sst <- sst[sst$month==5,]
-df$sst <- scale(sst$sstarc[match(df$Year, sst$year)])
-df$TemperatureC_3m <- scale(df$TemperatureC_3m )
+sstArc <- read.csv("./data/ersstArc.csv")
+sstArc <- sstArc[sstArc$month==5,]
+df$sstArc <- sstArc$sstarc[match(df$Year, sstArc$year)]
 
-#Reduce the 
-df$m_lat <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_lat']))
-df$m_long <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_long']))
+#You need this for the covariate and catchability predictions. You have to use the 
+#column headings of "Lat" and "Lon", I think.
+df$Lat <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_lat']))
+df$Lon <- as.numeric(unlist(locs[match(df$Station,locs$Station_ID),'m_long']))
 
 #Spatial extent of the survey
 strata.limits <- data.frame(
@@ -59,42 +62,49 @@ Options = c(SD_site_density = 0
 # Make settings
 settings = make_settings( n_x = length(unique(df$Station)), #Set knots equal to the number of unique stations 
                           Options = Options,
-                          treat_nonencounter_as_zero = TRUE,
+                          treat_nonencounter_as_zero = FALSE,
                           Region = "california_current",
                           strata.limits = strata.limits,
+                          max_cells = 5000,
                           purpose = "index")
 
 settings$ObsModel <- c(4,0) #Delta log-normal
 settings$FieldConfig['Beta',] = 4 #intercept rank
 settings$FieldConfig['Omega',] = c(3,3) #Spatial ranks for encounter and catch
-settings$FieldConfig['Epsilon',] =  c(3,3) #Spatiotemporal ranks for encounter and catch
 # settings$FieldConfig['Omega',] = c(0,0) #Spatial ranks for encounter and catch
+settings$FieldConfig['Epsilon',] =  c(3,3) #Spatiotemporal ranks for encounter and catch
 # settings$FieldConfig['Epsilon',] = c(0,0) #Spatiotemporal ranks for encounter and catch
 
 #Correlation for modeled processes
 settings$RhoConfig['Beta1'] = 3 #Encounter constant fixed intercept
 settings$RhoConfig['Beta2'] = 3 #Catch constant fixed intercept
-settings$RhoConfig['Epsilon1'] = 1 #yearly encounter iid
-settings$RhoConfig['Epsilon2'] = 1 #yearly catch rate iid
+settings$RhoConfig['Epsilon1'] = 0 #yearly encounter iid
+settings$RhoConfig['Epsilon2'] = 0 #yearly catch rate iid
 # settings$RhoConfig['Epsilon1'] = 0 #yearly encounter iid
 # settings$RhoConfig['Epsilon2'] = 0 #yearly catch rate iid
 
 #Make a dataset of the catchability data
-catchability_data <- df[,c('TemperatureC_3m','AvgOf_Top10mTempC','AvgOf_Top20mTempC','sst','sp')]
+covariate_data <- df[,c('Lat','Lon','Year','TemperatureC_3m','AvgOf_Top10mTempC','AvgOf_Top20mTempC','sstArc','sp')]
+names(covariate_data)[1] <- "Lat"
+names(covariate_data)[2] <- "Lon"
+
 
 # Run model
 fit = fit_model( settings = settings, #read in settings
-                 Lat_i = df[,'m_lat'],  
-                 Lon_i = df[,'m_long'], 
+                 Lat_i = df[,'Lat'],  
+                 Lon_i = df[,'Lon'], 
                  t_i = df[,'Year'], 
                  b_i = as_units(df[,'catch'],'count'), #Standardized by Cheryl
                  c_i = as.numeric(as.factor(df[,'sp']))-1, #-1 so factors start at 0 not 1
-                 a_i = as_units(df[,'Trawling_distance_.km.']*0.02,'km^2'), #area offset
-                 catchability_data = catchability_data,
-                 # Q1_formula = ~ TemperatureC_3m:sp + sst:sp,
-                 # Q2_formula = ~ TemperatureC_3m:sp + sst:sp,
-                 # Q1_formula = ~ AvgOf_Top20mTempC:sp,
-                 # Q2_formula = ~ AvgOf_Top20mTempC:sp,
+                 a_i = as_units(df[,'Trawling_distance_.km.']*0.028,'km^2'), #area offset
+                 covariate_data = covariate_data,
+                 catchability_data = covariate_data,
+                 #For the covariate formulas, you have to remove the intercept 
+                 #if you are going to make the marginal plots.
+                 Q1_formula = ~ poly(sstArc, degree = 1) : sp + 0, #sst, species-specific
+                 # Q2_formula = ~ poly(TemperatureC_3m, degree = 3) : sp, #sst, species-specific
+                 # X1_formula = ~ poly(TemperatureC_3m, degree = 3) : sp, #temp, not species specific, they're all negative with similar slopes
+                 X2_formula = ~ poly(TemperatureC_3m, degree = 1) : sp + 0, #temp, species-specific
                  getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
 
@@ -107,6 +117,9 @@ fit = fit_model( settings = settings, #read in settings
 #             plot_set = c(16),
 #             check_residuals = FALSE,
 #             Panel = "Year",
-#             n_cells = 50,
+#             # n_cells = 50,
 # )
 
+# plot_results(fit, plot_set = c(12),
+#              n_cells = 100,
+#              years_to_plot = round(seq(2020,2023,1))-1997)

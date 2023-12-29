@@ -1,5 +1,5 @@
 $Version
-[1] "VAST_v13_1_0"
+[1] "VAST_v14_0_1"
 
 $n_x
 [1] 68
@@ -22,7 +22,7 @@ Beta    "4"         "4"
 
 $RhoConfig
    Beta1    Beta2 Epsilon1 Epsilon2 
-       3        3        1        1 
+       3        3        0        0 
 
 $VamConfig
 Method   Rank Timing 
@@ -39,16 +39,16 @@ $vars_to_correct
 [1] "Index_cyl" "Index_ctl"
 
 $Options
-         SD_site_density       SD_site_logdensity          Calculate_Range       Calculate_evenness 
-                       0                        0                        0                        0 
-Calculate_effective_area         Calculate_Cov_SE      Calculate_Synchrony      Calculate_Coherence 
-                       0                        0                        0                        0 
+         SD_site_density       SD_site_logdensity          Calculate_Range       Calculate_evenness Calculate_effective_area 
+                       0                        0                        0                        0                        0 
+        Calculate_Cov_SE      Calculate_Synchrony      Calculate_Coherence 
+                       0                        0                        0 
 
 $grid_size_km
 [1] 25
 
 $max_cells
-[1] Inf
+[1] 5000
 
 $knot_method
 [1] "samples"

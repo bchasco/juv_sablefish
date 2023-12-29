@@ -47,10 +47,10 @@ world2 <- sf::st_transform(world,crs="+proj=utm +zone=10 +datum=WGS84  +units=km
 
 p <- ggplot(data = world2) +
   coord_sf(crs = "+proj=utm +datum=WGS84 +no_defs +zone=10 +units=km") +
-  xlim(300,510)+
+  xlim(250,510)+
   ylim(4925,5400)+
   scale_x_continuous(
-    limits = c(300,470),
+    limits = c(275,470),
     breaks = seq(-124.5,-124.5,1) #oddly enough this in decimal degrees
   ) +
   ggplot2::geom_raster(data = na.omit(all[all_pin==1,]), aes(x = x, y = y, fill= catch*encounter)) +
@@ -74,8 +74,9 @@ p <- ggplot(data = world2) +
              color = "red", 
              alpha = 0.3,
              shape = 16) +
-  labs(fill="Predicted\nlog(catch km^2)", size="Observed\nlog(catch km^2)")
+  labs(fill="Predicted\nlog(catch km^2)", size="Observed\nlog(catch km^2)") + 
+  theme(panel.spacing = unit(0, "lines"))
 
 print(p)
 
-ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\vastPrettyOutput.png", p, width = 6, height = 10, units="in")
+ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\vastPrettyOutput.png", p, width = 8, height = 10, units="in")

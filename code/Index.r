@@ -33,7 +33,7 @@ val$sd <- sd$sd
 
 ave <- val %>%
   group_by(cat) %>%
-  summarize(m = mean(est))
+  summarize(m = mean(est)) 
 
 # val$est <- exp(val$est - 0.5*val$sd^2)
 val$m <- ave$m[match(val$cat,ave$cat)]
