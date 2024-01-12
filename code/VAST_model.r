@@ -27,10 +27,13 @@ df <- df %>%
 
 options(pillar.sigfig=6)
 
+#This speeds up the mesh making by group lat lon coordinates by station
 locs <- df %>% 
   group_by(Station_ID = Station) %>%
   summarise(m_lat = mean(Lat), m_long = mean(Long))
 
+
+#Read the sst data
 sstArc <- read.csv("./data/ersstArc.csv")
 sstArc <- sstArc[sstArc$month==5,]
 df$sstArc <- sstArc$sstarc[match(df$Year, sstArc$year)]
@@ -69,11 +72,9 @@ settings = make_settings( n_x = length(unique(df$Station)), #Set knots equal to 
                           purpose = "index")
 
 settings$ObsModel <- c(4,0) #Delta log-normal
-settings$FieldConfig['Beta',] = 4 #intercept rank
+settings$FieldConfig['Beta',] = 4 #intercept rank for each "species"
 settings$FieldConfig['Omega',] = c(3,3) #Spatial ranks for encounter and catch
-# settings$FieldConfig['Omega',] = c(0,0) #Spatial ranks for encounter and catch
 settings$FieldConfig['Epsilon',] =  c(3,3) #Spatiotemporal ranks for encounter and catch
-# settings$FieldConfig['Epsilon',] = c(0,0) #Spatiotemporal ranks for encounter and catch
 
 #Correlation for modeled processes
 settings$RhoConfig['Beta1'] = 3 #Encounter constant fixed intercept
@@ -83,7 +84,7 @@ settings$RhoConfig['Epsilon2'] = 0 #yearly catch rate iid
 # settings$RhoConfig['Epsilon1'] = 0 #yearly encounter iid
 # settings$RhoConfig['Epsilon2'] = 0 #yearly catch rate iid
 
-#Make a dataset of the catchability data
+#Make a dataset of the catchability data. What's important is that the Latitude and Longitude columns are labeled 'Lat' and 'Lon'
 covariate_data <- df[,c('Lat','Lon','Year','TemperatureC_3m','AvgOf_Top10mTempC','AvgOf_Top20mTempC','sstArc','sp')]
 names(covariate_data)[1] <- "Lat"
 names(covariate_data)[2] <- "Lon"
@@ -97,13 +98,15 @@ fit = fit_model( settings = settings, #read in settings
                  b_i = as_units(df[,'catch'],'count'), #Standardized by Cheryl
                  c_i = as.numeric(as.factor(df[,'sp']))-1, #-1 so factors start at 0 not 1
                  a_i = as_units(df[,'Trawling_distance_.km.']*0.028,'km^2'), #area offset
-                 covariate_data = covariate_data,
-                 catchability_data = covariate_data,
+                 covariate_data = covariate_data, #This is habitat-specific 
+                 catchability_data = covariate_data, #This is sample specific, Something that relates to the sampling
                  #For the covariate formulas, you have to remove the intercept 
                  #if you are going to make the marginal plots.
+                 #The Q is sample-specific effect -- catchability data
                  Q1_formula = ~ poly(sstArc, degree = 1) : sp + 0, #sst, species-specific
                  # Q2_formula = ~ poly(TemperatureC_3m, degree = 3) : sp, #sst, species-specific
                  # X1_formula = ~ poly(TemperatureC_3m, degree = 3) : sp, #temp, not species specific, they're all negative with similar slopes
+                 #The X is for the habitat effects that occur at each spatial location in the mesh
                  X2_formula = ~ poly(TemperatureC_3m, degree = 1) : sp + 0, #temp, species-specific
                  getsd = TRUE,
                  fine_scale = FALSE) #Some years have no sablefish observations
