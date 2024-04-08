@@ -55,10 +55,11 @@ g <- ggplot(val, aes(x = year, y = (est/m)-1)) +
   geom_hline(data = ave,
              aes(yintercept = 0),
              inherit.aes = FALSE,
-             linetype = "dashed")
-  
+             linetype = "dashed") +
+  theme(text=element_text(size=14))
+
 print(g)
-ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\Index.png",g)
+ggsave("C:\\noaa\\projects\\juv_sablefish\\output\\Index.tiff",g, dpi = 300)
 
 
 ave_cv <- val %>%
