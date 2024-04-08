@@ -20,7 +20,7 @@ plot(pred,
 dev.off()
 
 pred = Effect.fit_model( fit,
-                         focal.predictors = c("AvgOf_Top10mTempC","sp"),
+                         focal.predictors = c("TemperatureC_3m","sp"),
                          which_formula = "X2",
                          pad_values = rep(1),
                          category_number = 1,
@@ -29,6 +29,6 @@ pred = Effect.fit_model( fit,
 png("./output/Temp3m.png", width = 400, height = 400)
 plot(pred, 
      ylab = "Density effect", 
-     xlab = "Temperature at 10m",
+     xlab = "Temperature at 3m",
      main = "")
 dev.off()
